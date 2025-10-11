@@ -1,0 +1,31 @@
+
+        int client_fd = accept(server_fd, NULL, NULL);
+        if (client_fd == -1) {
+            fprintf(stderr, "Failed to accept client");
+            continue;
+        }
+
+        uint32_t net_size = 0;
+        if (read_exact(client_fd, &net_size, sizeof(net_size)) == -1) {
+            perror("Failed to read payload size");
+            close(client_fd);
+            continue;
+        }
+        uint32_t payload_size = ntohl(net_size);
+
+        printf("Server: Payload size = %d\n", payload_size);
+        char buffer[payload_size + 1];
+
+        if (read_exact(client_fd, buffer, payload_size) == -1) {
+            perror("Failed to read payload");
+            close(client_fd);
+            continue;
+        }
+
+        buffer[payload_size] = 0;
+
+        if (write_exact(client_fd, buffer, payload_size) == -1) {
+            perror("Failed to write");
+        }
+
+        close(client_fd);
